@@ -1,0 +1,8 @@
+# Virtuele omgeving
+venv/
+
+# Logbestanden
+*.log
+
+# Rapporten
+rapport.html
