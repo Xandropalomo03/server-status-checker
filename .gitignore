@@ -3,6 +3,10 @@ venv/
 
 # Logbestanden
 *.log
+logs.json
 
 # Rapporten
 rapport.html
+
+# servers json file
+servers.json

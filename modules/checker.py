@@ -18,7 +18,7 @@ def run_checks():
     nieuwe_resultaten = []
 
     # Toon statusinformatie in de terminal
-    print("\n📡 Serverstatus:")
+    print("\nServerstatus:")
     for server in servers:
         naam = server["naam"]
         adres = server["adres"]
