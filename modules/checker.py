@@ -1,8 +1,8 @@
-from ping3 import ping, EXCEPTIONS
+from ping3 import ping
 from datetime import datetime
 import json
 import os
-from modules.html_report import generate_html
+from modules import html_report
 
 # Voert serverchecks uit en genereert een HTML-rapport
 def run_checks():
@@ -52,6 +52,6 @@ def run_checks():
     # Schrijf alle resultaten terug naar logs.json
     with open("logs.json", "w") as f:
         json.dump(alle_resultaten, f, indent=2)
-
-    # Genereer een HTML-rapport op basis van alle resultaten
-    generate_html(alle_resultaten)
+    
+    # resultaten mee geven naar de html generator
+    html_report.generate_html(alle_resultaten)
