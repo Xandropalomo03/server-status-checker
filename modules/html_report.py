@@ -12,7 +12,7 @@ def generate_html(resultaten):
     rows = ""
     for r in resultaten:
         # Bepaal de visuele statuskleur met Bootstrap-klassen
-        kleur_klasse = "text-success" if r["status"] == "OK" else "text-danger"
+        kleur_klasse = "text-success" if r["status"] == "OK" or r["status"] == "200 OK" else "text-danger"
         
         # Voeg een tabelrij toe met servergegevens en status
         rows += (
