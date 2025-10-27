@@ -2,42 +2,70 @@ from ping3 import ping
 from datetime import datetime
 import json
 import os
+import requests
 from modules import html_report
+from modules.manager import laad_server
 
-# Voert serverchecks uit en genereert een HTML-rapport
 def run_checks():
-    # Probeer de lijst van servers in te laden uit servers.json
-    try:
-        with open("servers.json") as f:
-            servers = json.load(f)
-    except FileNotFoundError:
-        print("een servers gevonden in servers.json.")
+    servers = laad_server()
+    if not servers:
+        print("Geen servers gevonden in servers.json.")
         return
 
-    # Lijst om nieuwe checkresultaten op te slaan
     nieuwe_resultaten = []
-
-    # Toon statusinformatie in de terminal
     print("\nServerstatus:")
+
     for server in servers:
-        naam = server["naam"]
-        adres = server["adres"]
-        resultaat = ping(adres, timeout=2)  # Voer een ping uit met een timeout van 2 seconden
-        status = "OK" if resultaat is not None else "NOT OK"
-        tijdstip = datetime.now().isoformat()  # Huidige tijdstip in ISO-formaat
+        naam = server.get("naam", "onbekend")
+        adres = server.get("adres", "onbekend")
+        type_ = server.get("type", "onbekend").strip().lower()
+        tijdstip = datetime.now().isoformat()
 
-        # Print het resultaat naar de terminal
-        print(f"- {naam} ({adres}): {status} om {tijdstip}")
+        # SERVER: ping uitvoeren
+        if type_ == "server":
+            resultaat = ping(adres, timeout=2)
+            status = "OK" if resultaat is not None else "NOT OK"
+            print(f"- {naam} ({adres}) [server]: {status} om {tijdstip}")
 
-        # Voeg het resultaat toe aan de lijst
+        # WEBSITE: HTTP-status ophalen
+        elif type_ == "website":
+            try:
+                response = requests.get(f"http://{adres}", timeout=5)
+                code = response.status_code
+
+                # Vertaal statuscode naar betekenis
+                if 200 <= code < 300:
+                    status = f"{code} OK"
+                elif 300 <= code < 400:
+                    status = f"{code} Redirect"
+                elif code == 404:
+                    status = "404 Niet gevonden"
+                elif 500 <= code < 600:
+                    status = f"{code} Serverfout"
+                else:
+                    status = f"{code} Onbekende status"
+
+                print(f"- {naam} ({adres}) [website]: {status} om {tijdstip}")
+
+            except requests.exceptions.RequestException as e:
+                status = f"Website fout: {str(e)}"
+                print(f"- {naam} ({adres}) [website]: {status} om {tijdstip}")
+
+        # ONBEKEND TYPE
+        else:
+            status = f"Onbekend type: {type_}"
+            print(f"- {naam} ({adres}) [onbekend]: {status} om {tijdstip}")
+
+        # Voeg resultaat toe aan log
         nieuwe_resultaten.append({
             "naam": naam,
             "adres": adres,
+            "type": type_,
             "status": status,
             "tijdstip": tijdstip
         })
 
-    # Probeer bestaande logs in te laden uit logs.json
+    # Voeg toe aan bestaande logs
     alle_resultaten = []
     if os.path.exists("logs.json"):
         with open("logs.json") as f:
@@ -46,12 +74,9 @@ def run_checks():
             except json.JSONDecodeError:
                 alle_resultaten = []
 
-    # Voeg de nieuwe resultaten toe aan de bestaande logs
     alle_resultaten.extend(nieuwe_resultaten)
 
-    # Schrijf alle resultaten terug naar logs.json
     with open("logs.json", "w") as f:
         json.dump(alle_resultaten, f, indent=2)
-    
-    # resultaten mee geven naar de html generator
+
     html_report.generate_html(alle_resultaten)
