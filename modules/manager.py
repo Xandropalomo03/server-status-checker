@@ -4,7 +4,7 @@ import json
 # Slaat de lijst van servers op in het bestand servers.json
 def toevoegen_servers(servers):
     with open("servers.json", "w") as f:
-        json.dump(servers, f)
+        json.dump(servers, f, indent=2)
 
 # Laadt de lijst van servers uit servers.json
 def laad_server():
